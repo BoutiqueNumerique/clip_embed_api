@@ -1,14 +1,20 @@
 from flask import Flask, request, jsonify
 from transformers import CLIPProcessor, CLIPModel
+from huggingface_hub import snapshot_download
 from PIL import Image
 import torch
 import io
+import os
 
 app = Flask(__name__)
 
-# Charger une seule fois le modèle CLIP
-model = CLIPModel.from_pretrained("laion/CLIP-ViT-B-16-laion2B-s34B-b88K")
-processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+# 📦 Télécharger le modèle dans un dossier temporaire local (évite les erreurs de cache)
+MODEL_DIR = "/tmp/clip-model"
+snapshot_download("openai/clip-vit-base-patch32", local_dir=MODEL_DIR, local_dir_use_symlinks=False)
+
+# 🧠 Charger le modèle et le processor
+model = CLIPModel.from_pretrained(MODEL_DIR)
+processor = CLIPProcessor.from_pretrained(MODEL_DIR)
 model.eval()
 
 @app.route('/embed', methods=['POST'])
@@ -26,8 +32,9 @@ def embed_image():
             vector = outputs[0].tolist()
 
         return jsonify({"clip_vector": vector})
-    
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
