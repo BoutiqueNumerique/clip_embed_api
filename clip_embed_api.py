@@ -7,7 +7,7 @@ import io
 app = Flask(__name__)
 
 # Charger une seule fois le modèle CLIP
-model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+model = CLIPModel.from_pretrained("laion/CLIP-ViT-B-16-laion2B-s34B-b88K")
 processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
 model.eval()
 
@@ -29,3 +29,5 @@ def embed_image():
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
